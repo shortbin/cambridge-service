@@ -17,7 +17,7 @@
       </plugin>
       <plugin>
         <artifactId>maven-shade-plugin</artifactId>
-        <version>3.1.1</version>
+        <version>3.6.0</version>
         <executions>
           <execution>
             <phase>package</phase>
@@ -56,7 +56,7 @@
   </build>
   <properties>
     <flink.connector.kafka.version>3.2.0-1.19</flink.connector.kafka.version>
-    <java.version>11</java.version>
+    <java.version>21</java.version>
     <flink.version>1.19.0</flink.version>
   </properties>
 </project>
