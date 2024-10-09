@@ -1,10 +1,10 @@
-package com.shortbin.cambridge_service;
+package com.shortbin.cambridge_service.model;
 
 import com.datastax.driver.mapping.annotations.Column;
 import com.datastax.driver.mapping.annotations.Table;
 
 @Table(keyspace = "example", name = "wordcount")
-public class WordCount {
+public class Click {
 
     @Column(name = "word")
     private String word = "";
@@ -12,10 +12,10 @@ public class WordCount {
     @Column(name = "count")
     private long count = 0;
 
-    public WordCount() {
+    public Click() {
     }
 
-    public WordCount(String word, long count) {
+    public Click(String word, long count) {
         this.setWord(word);
         this.setCount(count);
     }
@@ -40,4 +40,5 @@ public class WordCount {
     public String toString() {
         return getWord() + " : " + getCount();
     }
+
 }

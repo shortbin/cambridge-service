@@ -4,25 +4,23 @@ import com.datastax.driver.core.Cluster;
 import com.datastax.driver.core.QueryOptions;
 import com.datastax.driver.core.SocketOptions;
 import com.datastax.driver.mapping.Mapper;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.shortbin.cambridge_service.model.Click;
+import com.shortbin.cambridge_service.model.ClickEvent;
 import org.apache.flink.api.common.eventtime.WatermarkStrategy;
 import org.apache.flink.api.common.functions.FlatMapFunction;
-import org.apache.flink.api.common.functions.ReduceFunction;
 import org.apache.flink.api.common.serialization.SimpleStringSchema;
-import org.apache.flink.connector.kafka.sink.KafkaRecordSerializationSchema;
-import org.apache.flink.connector.kafka.sink.KafkaSink;
 import org.apache.flink.connector.kafka.source.KafkaSource;
 import org.apache.flink.connector.kafka.source.enumerator.initializer.OffsetsInitializer;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
-import org.apache.flink.streaming.api.windowing.assigners.TumblingProcessingTimeWindows;
-import org.apache.flink.streaming.api.windowing.time.Time;
 import org.apache.flink.streaming.connectors.cassandra.CassandraSink;
 import org.apache.flink.streaming.connectors.cassandra.ClusterBuilder;
 
 import java.net.InetSocketAddress;
 
 
-public class KafkaToKafka {
+public class KafkaToCassandra {
 
     public static void main(String[] args) throws Exception {
 
@@ -31,7 +29,7 @@ public class KafkaToKafka {
 //        env.setParallelism(4);
 
         String brokers = "ampere_2:9092";
-        String sinkTopic = "click-sink-test";
+        ObjectMapper objectMapper = new ObjectMapper();
 
         KafkaSource<String> source = KafkaSource.<String>builder()
                 .setBootstrapServers(brokers)
@@ -43,39 +41,16 @@ public class KafkaToKafka {
 
         DataStream<String> stream = env.fromSource(source, WatermarkStrategy.noWatermarks(), "Kafka Source");
 
-        KafkaSink<String> sink = KafkaSink.<String>builder()
-                .setBootstrapServers(brokers)
-                .setRecordSerializer(KafkaRecordSerializationSchema.builder()
-                        .setTopic(sinkTopic)
-                        .setValueSerializationSchema(new SimpleStringSchema())
-                        .build()
-                )
-//                .setDeliveryGuarantee(DeliveryGuarantee.EXACTLY_ONCE)
-                .build();
-
-        stream.sinkTo(sink);
-
-        DataStream<WordCount> result = stream
-                .flatMap((FlatMapFunction<String, WordCount>) (value, out) -> {
-                    // normalize and split the line
-                    String[] words = value.toLowerCase().split("\\s");
-
-                    // emit the pairs
-                    for (String word : words) {
-                        if (!word.isEmpty()) {
-                            //Do not accept empty word, since word is defined as primary key in C* table
-                            out.collect(new WordCount(word, 1L));
-                        }
-                    }
+        DataStream<Click> result = stream
+                .flatMap((FlatMapFunction<String, Click>) (value, out) -> {
+                    ClickEvent clickEvent = objectMapper.readValue(value, ClickEvent.class);
+                    out.collect(new Click(clickEvent.getUser_id(), clickEvent.getPage_id()));
                 })
-                .keyBy(WordCount::getWord)
-                .window(TumblingProcessingTimeWindows.of(Time.seconds(5)))
-                .reduce(new ReduceFunction<WordCount>() {
-                    @Override
-                    public WordCount reduce(WordCount a, WordCount b) {
-                        return new WordCount(a.getWord(), a.getCount() + b.getCount());
-                    }
-                });
+//                .keyBy(Click::getWord)
+//                .window(TumblingProcessingTimeWindows.of(Time.seconds(5)))
+//                .reduce((ReduceFunction<Click>) (a, b) -> new Click(a.getWord(), a.getCount() + b.getCount()))
+                // using returns to avoid lambda serialization (explicitly specifying type)
+                .returns(Click.class);
 
         ClusterBuilder cassClusterBuilder = new ClusterBuilder() {
             @Override
@@ -96,6 +71,6 @@ public class KafkaToKafka {
                 .build()
                 .name("Cassandra Sink");
 
-        env.execute("KafkaToKafka");
+        env.execute("KafkaToCassandra");
     }
 }

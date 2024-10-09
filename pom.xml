@@ -66,7 +66,7 @@
                             <transformers>
                                 <transformer
                                         implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                                    <mainClass>com.shortbin.cambridge_service.KafkaToKafka</mainClass>
+                                    <mainClass>com.shortbin.cambridge_service.KafkaToCassandra</mainClass>
                                 </transformer>
                             </transformers>
                         </configuration>
@@ -89,17 +89,6 @@
         </dependency>
         <dependency>
             <groupId>org.apache.flink</groupId>
-            <artifactId>flink-core</artifactId>
-            <version>${flink.version}</version>
-            <!--            <exclusions>-->
-            <!--                <exclusion>-->
-            <!--                    <artifactId>commons-logging</artifactId>-->
-            <!--                    <groupId>commons-logging</groupId>-->
-            <!--                </exclusion>-->
-            <!--            </exclusions>-->
-        </dependency>
-        <dependency>
-            <groupId>org.apache.flink</groupId>
             <artifactId>flink-connector-kafka</artifactId>
             <version>${flink.connector.kafka.version}</version>
         </dependency>
@@ -107,6 +96,11 @@
             <groupId>org.apache.flink</groupId>
             <artifactId>flink-connector-cassandra_2.12</artifactId>
             <version>${flink.connector.cassandra.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <version>1.18.34</version>
         </dependency>
     </dependencies>
 
