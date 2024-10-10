@@ -1,5 +1,6 @@
 package com.shortbin.cambridge_service.model;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -8,12 +9,25 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class ClickEvent {
-    private String user_id;
-    private Long page_id;
-//    private String adId;
-//    private String adType;
-//    private String eventTime;
-//    private String ipAddress;
-//    private String browser;
-//    private String os;
+
+    @JsonProperty("short_id")
+    private String shortID;
+
+    @JsonProperty("short_created_by")
+    private Integer shortCreatedBy;
+
+    @JsonProperty("ip_address")
+    private String ipAddress;
+
+    @JsonProperty("user_agent")
+    private String userAgent;
+
+    @JsonProperty("referer")
+    private String referer;
+
+    @JsonProperty("x_forwarded_for")
+    private String xForwardedFor;
+
+    @JsonProperty("request_host")
+    private String requestHost;
 }

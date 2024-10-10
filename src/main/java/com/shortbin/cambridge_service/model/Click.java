@@ -2,43 +2,43 @@ package com.shortbin.cambridge_service.model;
 
 import com.datastax.driver.mapping.annotations.Column;
 import com.datastax.driver.mapping.annotations.Table;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
-@Table(keyspace = "example", name = "wordcount")
+import java.util.UUID;
+
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+@Table(keyspace = "shortbin", name = "clicks")
 public class Click {
 
-    @Column(name = "word")
-    private String word = "";
+    @Column(name = "short_id")
+    private String shortID;
 
-    @Column(name = "count")
-    private long count = 0;
+    @Column(name = "timestamp")
+    private java.util.Date timestamp;
 
-    public Click() {
-    }
+    @Column(name = "id")
+    private UUID id;
 
-    public Click(String word, long count) {
-        this.setWord(word);
-        this.setCount(count);
-    }
+    @Column(name = "short_created_by")
+    private Integer shortCreatedBy;
 
-    public String getWord() {
-        return word;
-    }
+    @Column(name = "ip_address")
+    private String ipAddress;
 
-    public void setWord(String word) {
-        this.word = word;
-    }
+    @Column(name = "user_agent")
+    private String userAgent;
 
-    public long getCount() {
-        return count;
-    }
+    @Column(name = "referer")
+    private String referer;
 
-    public void setCount(long count) {
-        this.count = count;
-    }
+    // commenting for now, getting error
+//    @Column(name = "x_forwarded_for")
+//    private String xForwardedFor;
 
-    @Override
-    public String toString() {
-        return getWord() + " : " + getCount();
-    }
-
+    @Column(name = "request_host")
+    private String requestHost;
 }

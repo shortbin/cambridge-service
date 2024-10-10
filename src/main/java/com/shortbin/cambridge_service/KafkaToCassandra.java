@@ -44,7 +44,17 @@ public class KafkaToCassandra {
         DataStream<Click> result = stream
                 .flatMap((FlatMapFunction<String, Click>) (value, out) -> {
                     ClickEvent clickEvent = objectMapper.readValue(value, ClickEvent.class);
-                    out.collect(new Click(clickEvent.getUser_id(), clickEvent.getPage_id()));
+                    out.collect(new Click(
+                            clickEvent.getShortID(),
+                            new java.util.Date(),
+                            java.util.UUID.randomUUID(),
+                            clickEvent.getShortCreatedBy(),
+                            clickEvent.getIpAddress(),
+                            clickEvent.getUserAgent(),
+                            clickEvent.getReferer(),
+//                            clickEvent.getXForwardedFor(),
+                            clickEvent.getRequestHost()
+                    ));
                 })
 //                .keyBy(Click::getWord)
 //                .window(TumblingProcessingTimeWindows.of(Time.seconds(5)))
