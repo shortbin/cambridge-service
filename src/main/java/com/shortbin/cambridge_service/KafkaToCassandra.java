@@ -12,6 +12,7 @@ import org.apache.flink.api.common.eventtime.WatermarkStrategy;
 import org.apache.flink.api.common.functions.FlatMapFunction;
 import org.apache.flink.api.common.serialization.SimpleStringSchema;
 import org.apache.flink.connector.jdbc.JdbcConnectionOptions;
+import org.apache.flink.connector.jdbc.JdbcExecutionOptions;
 import org.apache.flink.connector.jdbc.JdbcSink;
 import org.apache.flink.connector.kafka.source.KafkaSource;
 import org.apache.flink.connector.kafka.source.enumerator.initializer.OffsetsInitializer;
@@ -47,7 +48,11 @@ public class KafkaToCassandra {
                 .setValueOnlyDeserializer(new SimpleStringSchema())
                 .build();
 
-        DataStream<String> stream = env.fromSource(source, WatermarkStrategy.noWatermarks(), "Kafka Source");
+        DataStream<String> stream = env.fromSource(
+                source,
+                WatermarkStrategy.noWatermarks(),
+                "Kafka Source"
+        );
 
         DataStream<Click> enhancedStream = stream
                 .flatMap((FlatMapFunction<String, Click>) (value, out) -> {
@@ -89,6 +94,10 @@ public class KafkaToCassandra {
                 .name("Cassandra Sink");
 
         DataStream<ClickAggregate> aggregatedStream = enhancedStream
+//                .assignTimestampsAndWatermarks(
+//                        WatermarkStrategy.<Click>forBoundedOutOfOrderness(Duration.ofSeconds(5))
+//                                .withTimestampAssigner((event, timestamp) -> event.getTimestamp().getTime())
+//                )
                 .keyBy(Click::getShortID)
                 .window(TumblingProcessingTimeWindows.of(Time.seconds(10)))
                 .apply((WindowFunction<Click, ClickAggregate, String, TimeWindow>) (shortId, window, input, out) -> {
@@ -102,7 +111,7 @@ public class KafkaToCassandra {
 //                        referrerCounter.merge(event.getReferer(), 1, Integer::sum);
                     }
                     out.collect(new ClickAggregate(shortId, count));
-                    System.out.println("Aggregating Clicks: " + shortId + " " + count);
+//                    System.out.println("Aggregating Clicks: " + shortId + " " + count);
                 })
                 .returns(ClickAggregate.class)
                 .name("Aggregated Clicks");
@@ -116,8 +125,13 @@ public class KafkaToCassandra {
                             ps.setInt(2, clickAggregate.getCount());
 //                            ps.setString(3, clickAggregate.getCountriesJson());
 //                            ps.setString(4, clickAggregate.getReferrersJson());
-                            System.out.println("Inserting into click_analytics: " + clickAggregate.getShortId() + " " + clickAggregate.getCount());
+//                            System.out.println("Inserting into click_analytics: " + clickAggregate.getShortId() + " " + clickAggregate.getCount());
                         },
+                        JdbcExecutionOptions.builder()
+                                .withBatchIntervalMs(200)             // optional: default = 0, meaning no time-based execution is done
+//                                .withBatchSize(1000)                  // optional: default = 5000 values
+                                .withMaxRetries(5)                    // optional: default = 3
+                                .build(),
                         new JdbcConnectionOptions.JdbcConnectionOptionsBuilder()
                                 .withUrl("jdbc:postgresql://ampere_2:5432/shortbin_dev")
                                 .withDriverName("org.postgresql.Driver")
