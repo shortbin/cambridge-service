@@ -107,7 +107,9 @@ public class KafkaToCassandra {
                 .name("Aggregated Clicks");
 
         aggregatedCounts.addSink(JdbcSink.sink(
-                        "INSERT INTO click_analytics (short_id, count) VALUES (?, ?)",
+                        "INSERT INTO click_analytics (short_id, count) VALUES (?, ?) " +
+                                "ON CONFLICT (short_id) DO UPDATE SET " +
+                                "count = click_analytics.count + EXCLUDED.count;",
                         (PreparedStatement ps, ClickAggregate clickAggregate) -> {
                             ps.setString(1, clickAggregate.getShortId());
                             ps.setInt(2, clickAggregate.getCount());
