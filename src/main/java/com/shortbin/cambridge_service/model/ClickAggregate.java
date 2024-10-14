@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class ClickAggregate {
     private String shortId;
-    private int count;
+    private Integer count;
 //    private Map<String, Integer> countryCounter;
 //    private Map<String, Integer> referrerCounter;
 //

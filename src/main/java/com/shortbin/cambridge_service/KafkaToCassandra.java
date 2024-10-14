@@ -88,11 +88,11 @@ public class KafkaToCassandra {
                 .build()
                 .name("Cassandra Sink");
 
-        DataStream<ClickAggregate> aggregatedCounts = enhancedStream
+        DataStream<ClickAggregate> aggregatedStream = enhancedStream
                 .keyBy(Click::getShortID)
                 .window(TumblingProcessingTimeWindows.of(Time.seconds(10)))
                 .apply((WindowFunction<Click, ClickAggregate, String, TimeWindow>) (shortId, window, input, out) -> {
-                    int count = 0;
+                    Integer count = 0;
 //                    Map<String, Integer> countryCounter = new HashMap<>();
 //                    Map<String, Integer> referrerCounter = new HashMap<>();
 
@@ -102,11 +102,12 @@ public class KafkaToCassandra {
 //                        referrerCounter.merge(event.getReferer(), 1, Integer::sum);
                     }
                     out.collect(new ClickAggregate(shortId, count));
+                    System.out.println("Aggregating Clicks: " + shortId + " " + count);
                 })
                 .returns(ClickAggregate.class)
                 .name("Aggregated Clicks");
 
-        aggregatedCounts.addSink(JdbcSink.sink(
+        aggregatedStream.addSink(JdbcSink.sink(
                         "INSERT INTO click_analytics (short_id, count) VALUES (?, ?) " +
                                 "ON CONFLICT (short_id) DO UPDATE SET " +
                                 "count = click_analytics.count + EXCLUDED.count;",
