@@ -26,6 +26,12 @@ public class Click {
     @Column(name = "short_created_by")
     private Integer shortCreatedBy;
 
+    @Column(name = "long_url")
+    private String longUrl;
+
+    @Column(name = "country")
+    private String country;
+
     @Column(name = "ip_address")
     private String ipAddress;
 

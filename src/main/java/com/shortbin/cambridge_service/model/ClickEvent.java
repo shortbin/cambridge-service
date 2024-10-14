@@ -16,6 +16,9 @@ public class ClickEvent {
     @JsonProperty("short_created_by")
     private Integer shortCreatedBy;
 
+    @JsonProperty("long_url")
+    private String longUrl;
+
     @JsonProperty("ip_address")
     private String ipAddress;
 
