@@ -27,6 +27,8 @@ import org.apache.flink.streaming.connectors.cassandra.ClusterBuilder;
 
 import java.net.InetSocketAddress;
 import java.sql.PreparedStatement;
+import java.util.HashMap;
+import java.util.Map;
 
 
 public class ClickAnalytics {
@@ -102,30 +104,32 @@ public class ClickAnalytics {
                 .window(TumblingProcessingTimeWindows.of(Time.seconds(10)))
                 .apply((WindowFunction<Click, ClickAggregate, String, TimeWindow>) (shortId, window, input, out) -> {
                     Integer count = 0;
-//                    Map<String, Integer> countryCounter = new HashMap<>();
-//                    Map<String, Integer> referrerCounter = new HashMap<>();
+                    Map<String, Integer> countryCounter = new HashMap<>();
+                    Map<String, Integer> referrerCounter = new HashMap<>();
 
                     for (Click event : input) {
                         count++;
-//                        countryCounter.merge(event.getCountry(), 1, Integer::sum);
-//                        referrerCounter.merge(event.getReferer(), 1, Integer::sum);
+                        countryCounter.merge(event.getCountry(), 1, Integer::sum);
+                        referrerCounter.merge(event.getReferer(), 1, Integer::sum);
                     }
-                    out.collect(new ClickAggregate(shortId, count));
-//                    System.out.println("Aggregating Clicks: " + shortId + " " + count);
+                    out.collect(new ClickAggregate(shortId, count, countryCounter, referrerCounter));
+                    System.out.println("Aggregating Clicks: " + shortId + " " + count + " " + countryCounter + " " + referrerCounter);
                 })
                 .returns(ClickAggregate.class)
                 .name("Aggregated Clicks");
 
         aggregatedStream.addSink(JdbcSink.sink(
-                        "INSERT INTO click_analytics (short_id, count) VALUES (?, ?) " +
+                        "INSERT INTO click_analytics (short_id, count, countries, referers) VALUES (?, ?, ?::jsonb, ?::jsonb) " +
                                 "ON CONFLICT (short_id) DO UPDATE SET " +
-                                "count = click_analytics.count + EXCLUDED.count;",
+                                "count = click_analytics.count + EXCLUDED.count, " +
+                                "countries = click_analytics.countries || EXCLUDED.countries, " +
+                                "referers = click_analytics.referers || EXCLUDED.referers;",
                         (PreparedStatement ps, ClickAggregate clickAggregate) -> {
                             ps.setString(1, clickAggregate.getShortId());
                             ps.setInt(2, clickAggregate.getCount());
-//                            ps.setString(3, clickAggregate.getCountriesJson());
-//                            ps.setString(4, clickAggregate.getReferrersJson());
-//                            System.out.println("Inserting into click_analytics: " + clickAggregate.getShortId() + " " + clickAggregate.getCount());
+                            ps.setString(3, clickAggregate.getCountriesJson());
+                            ps.setString(4, clickAggregate.getReferersJson());
+                            System.out.println("Inserting into click_analytics: " + clickAggregate);
                         },
                         JdbcExecutionOptions.builder()
                                 .withBatchIntervalMs(200)             // optional: default = 0, meaning no time-based execution is done
