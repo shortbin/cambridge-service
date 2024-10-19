@@ -5,6 +5,7 @@ import com.datastax.driver.core.QueryOptions;
 import com.datastax.driver.core.SocketOptions;
 import com.datastax.driver.mapping.Mapper;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.shortbin.cambridge_service.database.ConnectionPool;
 import com.shortbin.cambridge_service.model.Click;
 import com.shortbin.cambridge_service.model.ClickAggregate;
 import com.shortbin.cambridge_service.model.ClickEvent;
@@ -137,10 +138,10 @@ public class ClickAnalytics {
                                 .withMaxRetries(5)                    // optional: default = 3
                                 .build(),
                         new JdbcConnectionOptions.JdbcConnectionOptionsBuilder()
-                                .withUrl("jdbc:postgresql://ampere_2:5432/shortbin_dev")
-                                .withDriverName("org.postgresql.Driver")
-                                .withUsername("dev_user")
-                                .withPassword("jw8s0F4B5a")
+                                .withUrl(ConnectionPool.getDataSource().getJdbcUrl())
+//                                .withDriverName("org.postgresql.Driver")
+                                .withUsername(ConnectionPool.getDataSource().getUsername())
+                                .withPassword(ConnectionPool.getDataSource().getPassword())
                                 .build()
                 ))
                 .name("PostgreSQL Sink");

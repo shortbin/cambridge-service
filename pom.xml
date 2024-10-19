@@ -6,7 +6,7 @@
 
     <groupId>com.shortbin</groupId>
     <artifactId>cambridge-service</artifactId>
-    <version>0.3-SNAPSHOT</version>
+    <version>0.4</version>
     <packaging>jar</packaging>
 
     <properties>
@@ -111,6 +111,11 @@
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
             <version>1.18.34</version>
+        </dependency>
+        <dependency>
+            <groupId>com.zaxxer</groupId>
+            <artifactId>HikariCP</artifactId>
+            <version>6.0.0</version>
         </dependency>
     </dependencies>
 
