@@ -14,6 +14,7 @@
         <flink.version>1.19.0</flink.version>
         <flink.streaming.scala.version>1.20.0</flink.streaming.scala.version>
         <flink.connector.version>3.2.0-1.19</flink.connector.version>
+        <mongodb.driver.version>5.2.0</mongodb.driver.version>
         <postgresql.driver.version>42.7.4</postgresql.driver.version>
     </properties>
 
@@ -103,9 +104,9 @@
             <version>${flink.connector.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.postgresql</groupId>
-            <artifactId>postgresql</artifactId>
-            <version>${postgresql.driver.version}</version>
+            <groupId>org.mongodb</groupId>
+            <artifactId>mongodb-driver-sync</artifactId>
+            <version>${mongodb.driver.version}</version>
         </dependency>
         <dependency>
             <groupId>org.projectlombok</groupId>
