@@ -6,7 +6,7 @@
 
     <groupId>com.shortbin</groupId>
     <artifactId>cambridge-service</artifactId>
-    <version>0.3-SNAPSHOT</version>
+    <version>0.4</version>
     <packaging>jar</packaging>
 
     <properties>
@@ -15,7 +15,7 @@
         <flink.streaming.scala.version>1.20.0</flink.streaming.scala.version>
         <flink.connector.version>3.2.0-1.19</flink.connector.version>
         <mongodb.driver.version>5.2.0</mongodb.driver.version>
-        <postgresql.driver.version>42.7.4</postgresql.driver.version>
+        <lombok.version>1.18.34</lombok.version>
     </properties>
 
     <build>
@@ -111,7 +111,7 @@
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
-            <version>1.18.34</version>
+            <version>${lombok.version}</version>
         </dependency>
     </dependencies>
 
