@@ -53,7 +53,7 @@ public class MongoSink extends RichSinkFunction<ClickAggregate> {
 
         UpdateOneModel<Document> updateModel = new UpdateOneModel<>(
                 Filters.and(
-                        Filters.eq("_id", clickAggregate.getShortId()),
+                        Filters.eq("short_id", clickAggregate.getShortId()),
                         Filters.eq("date", LocalDate.now())
                 ),
                 Updates.combine(updates),
