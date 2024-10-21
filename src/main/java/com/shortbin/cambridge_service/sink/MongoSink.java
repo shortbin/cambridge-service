@@ -12,6 +12,7 @@ import org.apache.flink.streaming.api.functions.sink.RichSinkFunction;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -51,7 +52,10 @@ public class MongoSink extends RichSinkFunction<ClickAggregate> {
         }
 
         UpdateOneModel<Document> updateModel = new UpdateOneModel<>(
-                Filters.eq("_id", clickAggregate.getShortId()),
+                Filters.and(
+                        Filters.eq("_id", clickAggregate.getShortId()),
+                        Filters.eq("date", LocalDate.now())
+                ),
                 Updates.combine(updates),
                 new UpdateOptions().upsert(true)
         );
