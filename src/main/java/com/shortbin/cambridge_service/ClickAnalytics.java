@@ -8,12 +8,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.shortbin.cambridge_service.model.Click;
 import com.shortbin.cambridge_service.model.ClickAggregate;
 import com.shortbin.cambridge_service.model.ClickEvent;
+import com.shortbin.cambridge_service.sink.MongoSink;
 import org.apache.flink.api.common.eventtime.WatermarkStrategy;
 import org.apache.flink.api.common.functions.FlatMapFunction;
 import org.apache.flink.api.common.serialization.SimpleStringSchema;
-import org.apache.flink.connector.jdbc.JdbcConnectionOptions;
-import org.apache.flink.connector.jdbc.JdbcExecutionOptions;
-import org.apache.flink.connector.jdbc.JdbcSink;
 import org.apache.flink.connector.kafka.source.KafkaSource;
 import org.apache.flink.connector.kafka.source.enumerator.initializer.OffsetsInitializer;
 import org.apache.flink.streaming.api.datastream.DataStream;
@@ -26,7 +24,6 @@ import org.apache.flink.streaming.connectors.cassandra.CassandraSink;
 import org.apache.flink.streaming.connectors.cassandra.ClusterBuilder;
 
 import java.net.InetSocketAddress;
-import java.sql.PreparedStatement;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -118,32 +115,13 @@ public class ClickAnalytics {
                 .returns(ClickAggregate.class)
                 .name("Aggregated Clicks");
 
-        aggregatedStream.addSink(JdbcSink.sink(
-                        "INSERT INTO click_analytics (short_id, count, countries, referers) VALUES (?, ?, ?::jsonb, ?::jsonb) " +
-                                "ON CONFLICT (short_id) DO UPDATE SET " +
-                                "count = click_analytics.count + EXCLUDED.count, " +
-                                "countries = click_analytics.countries || EXCLUDED.countries, " +
-                                "referers = click_analytics.referers || EXCLUDED.referers;",
-                        (PreparedStatement ps, ClickAggregate clickAggregate) -> {
-                            ps.setString(1, clickAggregate.getShortId());
-                            ps.setInt(2, clickAggregate.getCount());
-                            ps.setString(3, clickAggregate.getCountriesJson());
-                            ps.setString(4, clickAggregate.getReferersJson());
-                            System.out.println("Inserting into click_analytics: " + clickAggregate);
-                        },
-                        JdbcExecutionOptions.builder()
-                                .withBatchIntervalMs(200)             // optional: default = 0, meaning no time-based execution is done
-//                                .withBatchSize(1000)                  // optional: default = 5000 values
-                                .withMaxRetries(5)                    // optional: default = 3
-                                .build(),
-                        new JdbcConnectionOptions.JdbcConnectionOptionsBuilder()
-                                .withUrl("jdbc:postgresql://ampere_2:5432/shortbin_dev")
-                                .withDriverName("org.postgresql.Driver")
-                                .withUsername("dev_user")
-                                .withPassword("jw8s0F4B5a")
-                                .build()
+        aggregatedStream
+                .addSink(new MongoSink(
+                        "mongodb://root:example@ampere_2:27017/?authSource=admin",
+                        "shortbin",
+                        "clicks"
                 ))
-                .name("PostgreSQL Sink");
+                .name("Mongo Sink");
 
         env.execute("ClickAnalytics");
     }
